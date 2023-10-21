@@ -1,0 +1,42 @@
+package uno.cards.actioncards;
+
+import uno.UnoGame;
+import uno.cards.Card;
+import uno.cards.Color;
+import uno.players.Player;
+
+public class Draw2 extends ActionCard {
+    public Draw2(Color color) {
+        super(color);
+    }
+
+    @Override
+    public boolean matches(Card other) {
+        if (this.getColor().equals(other.getColor())) {
+            return true;
+        }
+
+        return other instanceof Draw2;
+    }
+
+    @Override
+    public void action(UnoGame game) {
+        Player subsequentPlayer = game.getSubsequentPlayer();
+
+        // Draw 2 cards.
+        for (int i = 0; i < 2; i++) {
+            if (game.getDrawPile().isEmpty()) {
+                game.shuffleAndTurnAround();
+            }
+            subsequentPlayer.drawCardFrom(game.getDrawPile());
+        }
+
+        System.out.println("Skipping next player: " + game.getSubsequentPlayer().getName());
+        game.passTurn();
+    }
+
+    @Override
+    public String toString() {
+        return this.getColor() + "_DRAW2";
+    }
+}
