@@ -56,7 +56,7 @@ public class Player {
         return hasPlayableHand;
     }
 
-    public Card getPlayableCard(Card topCard) {
+    private Card getPlayableCard(Card topCard) {
         for (Card potentialMove : hand) {
             boolean isMoveValid = potentialMove.matches(topCard);
             if (isMoveValid) {
