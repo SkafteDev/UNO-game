@@ -16,7 +16,7 @@ public class WildDraw4Card extends WildCard {
         // Draw 4 cards.
         for (int i = 0; i < 4; i++) {
             if (game.getDrawPile().isEmpty()) {
-                game.shuffleAndTurnAround();
+                game.shuffleDiscardPile();
             }
             subsequentPlayer.drawCardFrom(game.getDrawPile());
         }

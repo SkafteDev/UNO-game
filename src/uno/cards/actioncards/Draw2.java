@@ -26,7 +26,7 @@ public class Draw2 extends ActionCard {
         // Draw 2 cards.
         for (int i = 0; i < 2; i++) {
             if (game.getDrawPile().isEmpty()) {
-                game.shuffleAndTurnAround();
+                game.shuffleDiscardPile();
             }
             subsequentPlayer.drawCardFrom(game.getDrawPile());
         }

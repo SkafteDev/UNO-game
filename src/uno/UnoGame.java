@@ -13,8 +13,8 @@ import java.util.Random;
 public class UnoGame {
 
     private DrawPile drawPile;
-    private DiscardPile discardPile;
-    private ArrayList<Player> players;
+    private final DiscardPile discardPile;
+    private final ArrayList<Player> players;
     private Player currentPlayer;
     private Player winner;
 
@@ -24,26 +24,60 @@ public class UnoGame {
         this.discardPile = new DiscardPile(initializeTopCard());
     }
 
-    private Card initializeTopCard() {
-        Card firstTopCard = drawPile.draw();
-        while ((firstTopCard instanceof WildCard)) {
-            firstTopCard = drawPile.draw();
-        }
-        return firstTopCard;
+    public DrawPile getDrawPile() {
+        return drawPile;
     }
 
-    public void shuffleAndTurnAround() {
-        if (drawPile.isEmpty()) {
-            drawPile = discardPile.shuffleAndTurnAround();
+    public ArrayList<Player> getPlayers() {
+        return players;
+    }
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public Player getSubsequentPlayer() {
+        int currentPlayerIndex = this.players.indexOf(currentPlayer);
+        int nextPlayerIndex = currentPlayerIndex + 1;
+
+        if (nextPlayerIndex >= players.size()) {
+            nextPlayerIndex = 0;
         }
+
+        return this.players.get(nextPlayerIndex);
+    }
+
+    public Player getPreviousPlayer() {
+        int currentPlayerIndex = this.players.indexOf(currentPlayer);
+        int previousPlayerIndex = currentPlayerIndex - 1;
+
+        if (previousPlayerIndex < 0) {
+            previousPlayerIndex = this.players.size() - 1;
+        }
+
+        return this.players.get(previousPlayerIndex);
+    }
+
+    public void addPlayer(Player p) {
+        if (this.players.size() > 10) {
+            throw new RuntimeException("Maximum 10 players allowed.");
+        }
+
+        if (this.players.contains(p)) {
+            throw new RuntimeException("Cannot add the same player twice.");
+        }
+
+        this.players.add(p);
     }
 
     public void passTurn() {
         this.currentPlayer = getSubsequentPlayer();
     }
 
-    public Player getCurrentPlayer() {
-        return currentPlayer;
+    public void shuffleDiscardPile() {
+        if (drawPile.isEmpty()) {
+            drawPile = discardPile.shuffleAndTurnAround();
+        }
     }
 
     public void play() {
@@ -65,9 +99,8 @@ public class UnoGame {
                 continue; // No playable hand. Next player's turn.
             }
 
-            currentPlayer.choosePlayableCard(discardPile.getTopCard());
-            System.out.println(currentPlayer.getName() + " plays: " + currentPlayer.getChosenCard());
-            currentPlayer.playChosenCard(discardPile);
+            Card playedCard = currentPlayer.playCard(discardPile);
+            System.out.println(currentPlayer.getName() + " played: " + playedCard);
 
             // If the player lay down an action card:
             // Perform the action of that card.
@@ -88,7 +121,7 @@ public class UnoGame {
         if (!currentPlayer.hasPlayableHand(discardPile.getTopCard())) {
             System.out.printf("\n%s has no playable hand. Drawing.\n", currentPlayer.getName());
             if (drawPile.isEmpty()) {
-                shuffleAndTurnAround();
+                shuffleDiscardPile();
             }
             currentPlayer.drawCardFrom(drawPile);
         }
@@ -99,7 +132,15 @@ public class UnoGame {
         return this.players.get(randomPlayerIndex);
     }
 
-    public void printGameStatus() {
+    private Card initializeTopCard() {
+        Card firstTopCard = drawPile.draw();
+        while ((firstTopCard instanceof WildCard)) {
+            firstTopCard = drawPile.draw();
+        }
+        return firstTopCard;
+    }
+
+    private void printGameStatus() {
         StringBuilder sb = new StringBuilder("\n");
 
         String pilesString = String.format("|Drawpile: %-9d | Discardpile: %-14s |\n", drawPile.getSize(), discardPile.getTopCard());
@@ -124,7 +165,7 @@ public class UnoGame {
 
     }
 
-    public boolean isGameFinished() {
+    private boolean isGameFinished() {
         for (Player p : players) {
             if (p.getHand().isEmpty()) {
                 this.winner = p;
@@ -135,18 +176,6 @@ public class UnoGame {
         return false;
     }
 
-    public void addPlayer(Player p) {
-        if (this.players.size() > 10) {
-            throw new RuntimeException("Maximum 10 players allowed.");
-        }
-
-        if (this.players.contains(p)) {
-            throw new RuntimeException("Cannot add the same player twice.");
-        }
-
-        this.players.add(p);
-    }
-
     private void dealCards() {
         int cardsToEachPlayer = 7;
 
@@ -155,35 +184,5 @@ public class UnoGame {
                 p.receiveCard(drawPile.draw());
             }
         }
-    }
-
-    public DrawPile getDrawPile() {
-        return drawPile;
-    }
-
-    public ArrayList<Player> getPlayers() {
-        return players;
-    }
-
-    public Player getSubsequentPlayer() {
-        int currentPlayerIndex = this.players.indexOf(currentPlayer);
-        int nextPlayerIndex = currentPlayerIndex + 1;
-
-        if (nextPlayerIndex >= players.size()) {
-            nextPlayerIndex = 0;
-        }
-
-        return this.players.get(nextPlayerIndex);
-    }
-
-    public Player getPreviousPlayer() {
-        int currentPlayerIndex = this.players.indexOf(currentPlayer);
-        int previousPlayerIndex = currentPlayerIndex - 1;
-
-        if (previousPlayerIndex < 0) {
-            previousPlayerIndex = this.players.size() - 1;
-        }
-
-        return this.players.get(previousPlayerIndex);
     }
 }
