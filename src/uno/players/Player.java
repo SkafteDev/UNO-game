@@ -50,11 +50,11 @@ public abstract class Player {
     public void displayHand() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.name);
-        sb.append(" hand: ");
+        sb.append(" hand:\n");
 
         for (int i = 0; i < hand.size(); i++) {
             String card = String.format("%s", hand.get(i));
-            sb.append(i).append(":").append(card).append("\t\t");
+            sb.append(i).append(":").append(card).append(", ");
         }
 
         System.out.println(sb);

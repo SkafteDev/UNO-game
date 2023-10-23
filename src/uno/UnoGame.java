@@ -102,10 +102,7 @@ public class UnoGame {
             Card playedCard = currentPlayer.playCard(discardPile);
             System.out.println(currentPlayer.getName() + " played: " + playedCard);
 
-            // If the player lay down an action card:
-            // Perform the action of that card.
-            // E.g., skip next player, reverse player order, next player draws 2 cards, ...
-            if (discardPile.getTopCard() instanceof ActionCard actionCard) {
+            if (playedCard instanceof ActionCard actionCard) {
                 actionCard.action(this);
             }
 
