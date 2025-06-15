@@ -2,7 +2,6 @@ package uno;
 
 import uno.cards.Card;
 import uno.cards.actioncards.ActionCard;
-import uno.cards.actioncards.WildCard;
 import uno.piles.DiscardPile;
 import uno.piles.DrawPile;
 import uno.players.Player;
@@ -130,10 +129,15 @@ public class UnoGame {
     }
 
     private Card initializeTopCard() {
-        Card firstTopCard = drawPile.draw();
-        while ((firstTopCard instanceof WildCard)) {
+        Card firstTopCard;
+        do {
             firstTopCard = drawPile.draw();
-        }
+
+            if(firstTopCard instanceof ActionCard) {
+                drawPile.placeCardRandomly(firstTopCard);
+            }
+        } while ((firstTopCard instanceof ActionCard));
+
         return firstTopCard;
     }
 

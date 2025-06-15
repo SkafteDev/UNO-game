@@ -25,16 +25,14 @@ public class DiscardPile {
     }
 
     public DrawPile shuffleAndTurnAround() {
+        Card topCard = this.cards.get(this.cards.size()-1);
+
+        this.cards.remove(topCard);
         Collections.shuffle(cards);
         DrawPile drawPile = new DrawPile(new ArrayList<>(cards));
         this.cards.clear();
 
-        Card potentialTopCard;
-
-        do {
-            potentialTopCard = drawPile.draw();
-            this.cards.add(potentialTopCard);
-        } while (potentialTopCard instanceof WildCard);
+        this.cards.add(topCard);
 
         return drawPile;
     }

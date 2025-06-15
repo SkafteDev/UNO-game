@@ -10,9 +10,11 @@ public class Main {
         Player p1 = new HumanPlayer("Alice");
         Player p2 = new ComputerPlayer("Computer1");
         Player p3 = new ComputerPlayer("Computer2");
+        Player p4 = new ComputerPlayer("Computer3");
         game.addPlayer(p1);
         game.addPlayer(p2);
         game.addPlayer(p3);
+        game.addPlayer(p4);
 
         game.play();
     }

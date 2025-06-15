@@ -27,7 +27,7 @@ public class HumanPlayer extends Player {
         Card selectedCard = null;
 
         do {
-            System.out.println("Choose a playable card from the hand.");
+            System.out.println("\nChoose a playable card from the hand.");
             int index = Integer.parseInt(scanner.nextLine());
             if (index < 0 || index > getHand().size()) {
                 System.out.println("Invalid index chosen.");

@@ -7,6 +7,8 @@ import uno.cards.actioncards.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 public class DrawPile {
     private final ArrayList<Card> cards;
@@ -112,6 +114,13 @@ public class DrawPile {
 
         int cardToRemove = this.cards.size()-1;
         return this.cards.remove(cardToRemove);
+    }
+
+    public int placeCardRandomly(Card card) {
+        Random r = new Random();
+        int randomIndex = r.nextInt(this.cards.size());
+        this.cards.add(randomIndex, card);
+        return randomIndex;
     }
 
     public boolean isEmpty() {
