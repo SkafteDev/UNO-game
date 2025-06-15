@@ -57,7 +57,7 @@
                 <div class="col-12 col-md-3">
                   <q-card class="column" style="height:300px">
                     <q-card-section class="bg-secondary text-white">Chat</q-card-section>
-                    <q-card-section class="scroll" style="flex:1 1 auto">
+                    <q-card-section class="scroll" style="flex:1 1 auto; overflow-y:auto;">
                       <div v-for="(c,idx) in chats" :key="idx">{{ c }}</div>
                     </q-card-section>
                     <q-card-actions>
@@ -75,12 +75,13 @@
                   </div>
                 </div>
                 <q-btn color="orange" class="q-mt-sm" label="Skip" v-if="canSkip" @click="skipTurn" />
+                <q-btn color="secondary" class="q-mt-sm q-ml-sm" :label="autoplay ? 'Stop Autoplay' : 'Autoplay'" @click="toggleAutoplay" />
               </div>
               <q-dialog v-model="colorSelectVisible">
                 <q-card>
                   <q-card-section class="text-subtitle2">Choose color</q-card-section>
                   <q-card-actions class="row justify-around q-gutter-sm">
-                    <q-btn color="red" label="Red" @click="chooseColor('RED')"></q-btn>
+              <div class="q-mt-md" style="max-height:200px; overflow-y:auto;">
                     <q-btn color="blue" label="Blue" @click="chooseColor('BLUE')"></q-btn>
                     <q-btn color="green" label="Green" @click="chooseColor('GREEN')"></q-btn>
                     <q-btn color="yellow" label="Yellow" @click="chooseColor('YELLOW')"></q-btn>
