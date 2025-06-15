@@ -74,8 +74,8 @@
                     <q-chip :label="displayLabel(card)" :color="cardColor(card)" text-color="white" clickable @click="playCard(idx)" />
                   </div>
                 </div>
-                <q-btn color="orange" class="q-mt-sm" label="Skip" v-if="canSkip" @click="skipTurn" />
-                <q-btn color="secondary" class="q-mt-sm q-ml-sm" :label="autoplay ? 'Stop Autoplay' : 'Autoplay'" @click="toggleAutoplay" />
+                <q-btn color="orange" class="q-mt-sm" label="Skip" v-if="canSkip" @click="skipTurn"></q-btn>
+                <q-btn color="secondary" class="q-mt-sm q-ml-sm" :label="autoplay ? 'Stop Autoplay' : 'Autoplay'" @click="toggleAutoplay"></q-btn>
               </div>
               <q-dialog v-model="colorSelectVisible">
                 <q-card>
