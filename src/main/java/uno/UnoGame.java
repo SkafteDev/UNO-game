@@ -29,6 +29,10 @@ public class UnoGame {
         this.listener = listener;
     }
 
+    public GameListener getListener() {
+        return listener;
+    }
+
     public DrawPile getDrawPile() {
         return drawPile;
     }
@@ -137,7 +141,7 @@ public class UnoGame {
             }
             Card drawn = drawPile.draw();
             currentPlayer.receiveCard(drawn);
-            if (listener != null) listener.onDraw(currentPlayer, drawn);
+            if (listener != null) listener.onDraw(currentPlayer, java.util.List.of(drawn));
             return drawn;
         }
         return null;

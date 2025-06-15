@@ -23,51 +23,76 @@
             <q-btn color="primary" label="Connect" @click="connect" :disable="!playerName" />
           </div>
           <div v-else class="q-gutter-md">
-            <div>
+            <div v-if="!gameStarted">
+              <div class="text-h6">Waiting room</div>
+              <div v-for="p in waiting" :key="p.name" class="q-mb-xs">
+                <q-chip :label="p.name" :color="p.ready ? 'green' : 'grey'" text-color="white" />
+              </div>
               <q-btn color="green" label="Ready" v-if="!ready" @click="sendReady" />
             </div>
-            <div class="row q-mt-md">
-              <div class="col-12 col-md-3">
-                <q-card>
-                  <q-card-section>
-                    <div class="text-subtitle2">Deck</div>
-                    <div>{{ deckCount }} cards</div>
-                    <div class="q-mt-sm">
-                      <span>Top card:</span>
-                      <q-chip :label="topCardLabel()" :color="topCardColor()" text-color="white" />
-                    </div>
-                  </q-card-section>
-                </q-card>
-              </div>
-              <div class="col-12 col-md-9">
-                <q-card>
-                  <q-card-section>
-                    <div class="text-subtitle2">Players</div>
-                    <div v-for="p in players" :key="p.name" class="q-mb-xs">
-                      <q-chip :label="p.name + ': ' + p.cards" :color="p.name === currentPlayer ? 'orange' : 'secondary'" text-color="white" />
-                    </div>
-                  </q-card-section>
-                </q-card>
-              </div>
-            </div>
-            <div class="q-mt-md">
-              <div class="text-subtitle2">Your hand</div>
-              <div class="row q-col-gutter-sm">
-                <div class="col-auto" v-for="(card, idx) in hand" :key="idx">
-                  <q-chip :label="displayLabel(card)" :color="cardColor(card)" text-color="white" clickable @click="playCard(idx)" />
+            <div v-else>
+              <div class="row q-mt-md">
+                <div class="col-12 col-md-3">
+                  <q-card>
+                    <q-card-section>
+                      <div class="text-subtitle2">Deck</div>
+                      <div>{{ deckCount }} cards</div>
+                      <div class="q-mt-sm">
+                        <span>Top card:</span>
+                        <q-chip :label="topCardLabel()" :color="topCardColor()" text-color="white" />
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </div>
+                <div class="col-12 col-md-6">
+                  <q-card>
+                    <q-card-section>
+                      <div class="text-subtitle2">Players</div>
+                      <div v-for="p in players" :key="p.name" class="q-mb-xs">
+                        <q-chip :label="p.name + ': ' + p.cards" :color="p.name == currentPlayer ? 'orange' : 'secondary'" text-color="white" />
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </div>
+                <div class="col-12 col-md-3">
+                  <q-card class="column" style="height:300px">
+                    <q-card-section class="bg-secondary text-white">Chat</q-card-section>
+                    <q-card-section class="scroll" style="flex:1 1 auto">
+                      <div v-for="(c,idx) in chats" :key="idx">{{ c }}</div>
+                    </q-card-section>
+                    <q-card-actions>
+                      <q-input dense v-model="chatInput" @keyup.enter="sendChat" placeholder="Message" />
+                      <q-btn flat label="Send" @click="sendChat" />
+                    </q-card-actions>
+                  </q-card>
                 </div>
               </div>
-              <q-btn color="orange" class="q-mt-sm" label="Skip" v-if="canSkip" @click="skipTurn" />
-            </div>
-            <div v-if="colorSelectVisible" class="q-mt-md">
-              <div class="text-subtitle2">Choose color</div>
-              <q-btn color="red" class="q-mr-sm" label="Red" @click="chooseColor('RED')" />
-              <q-btn color="blue" class="q-mr-sm" label="Blue" @click="chooseColor('BLUE')" />
-              <q-btn color="green" class="q-mr-sm" label="Green" @click="chooseColor('GREEN')" />
-              <q-btn color="yellow" label="Yellow" @click="chooseColor('YELLOW')" />
-            </div>
-            <div class="q-mt-md">
-              <div v-for="m in messages" :key="m">{{ m }}</div>
+              <div class="q-mt-md">
+                <div class="text-subtitle2">Your hand</div>
+                <div class="row q-col-gutter-sm">
+                  <div class="col-auto" v-for="(card, idx) in hand" :key="idx">
+                    <q-chip :label="displayLabel(card)" :color="cardColor(card)" text-color="white" clickable @click="playCard(idx)" />
+                  </div>
+                </div>
+                <q-btn color="orange" class="q-mt-sm" label="Skip" v-if="canSkip" @click="skipTurn" />
+              </div>
+              <q-dialog v-model="colorSelectVisible">
+                <q-card>
+                  <q-card-section class="text-subtitle2">Choose color</q-card-section>
+                  <q-card-actions align="around">
+                    <q-btn color="red" label="Red" @click="chooseColor('RED')" />
+                    <q-btn color="blue" label="Blue" @click="chooseColor('BLUE')" />
+                    <q-btn color="green" label="Green" @click="chooseColor('GREEN')" />
+                    <q-btn color="yellow" label="Yellow" @click="chooseColor('YELLOW')" />
+                  </q-card-actions>
+                </q-card>
+              </q-dialog>
+              <div class="q-mt-md">
+                <div v-for="(m,idx) in messages" :key="idx">
+                  <span>{{ m.text }}</span>
+                  <q-chip v-for="(c,i) in m.cards" :key="i" :label="displayLabel(c)" :color="cardColor(c)" text-color="white" class="q-ml-xs" />
+                </div>
+              </div>
             </div>
           </div>
         </q-page>

@@ -8,11 +8,15 @@ createApp({
       playerName: '',
       connected: false,
       ready: false,
+      gameStarted: false,
       deckCount: 0,
       players: [],
+      waiting: [],
       hand: [],
       topCard: '',
       messages: [],
+      chats: [],
+      chatInput: '',
       colorSelectVisible: false,
       currentPlayer: '',
       canSkip: false
@@ -26,14 +30,25 @@ createApp({
         this.connected = true;
       });
       this.socket.on('message', msg => {
-        this.messages.push(msg);
+        if (typeof msg === 'string') {
+          this.messages.push({ text: msg, cards: [] });
+        } else {
+          this.messages.push(msg);
+        }
       });
       this.socket.on('state', state => {
+        this.gameStarted = true;
         this.deckCount = state.deck;
         this.topCard = state.topCard;
         this.players = state.players;
         this.hand = state.hand;
         this.currentPlayer = state.current;
+      });
+      this.socket.on('waiting', info => {
+        this.waiting = info;
+      });
+      this.socket.on('start', () => {
+        this.gameStarted = true;
       });
       this.socket.on('requestPlay', hasPlayable => {
         this.canSkip = !hasPlayable;
@@ -42,8 +57,14 @@ createApp({
         this.colorSelectVisible = true;
       });
       this.socket.on('noPlayable', msg => {
-        this.messages.push(msg);
+        this.messages.push({ text: msg, cards: [] });
         this.canSkip = true;
+      });
+      this.socket.on('drawnCards', payload => {
+        this.messages.push({ text: payload.text, cards: payload.cards });
+      });
+      this.socket.on('chat', msg => {
+        this.chats.push(msg);
       });
     },
     sendReady() {
@@ -68,6 +89,12 @@ createApp({
       if (this.socket) {
         this.socket.emit('color', color);
         this.colorSelectVisible = false;
+      }
+    },
+    sendChat() {
+      if (this.socket && this.chatInput.trim()) {
+        this.socket.emit('chat', this.chatInput.trim());
+        this.chatInput = '';
       }
     },
     cardColor(card) {

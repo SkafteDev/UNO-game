@@ -133,6 +133,9 @@ public class UnoServer implements GameListener {
                 if (p != null) {
                     game.getPlayers().remove(p);
                     broadcast(p.getName() + " disconnected.");
+                    if (!started) {
+                        sendWaitingState();
+                    }
                     checkStartGame();
                 }
             }
@@ -156,6 +159,7 @@ public class UnoServer implements GameListener {
                 game.addPlayer(rp);
                 broadcast(name + " joined the game.");
                 client.sendEvent("message", "Type 'ready' when you are ready to play.");
+                sendWaitingState();
                 checkStartGame();
             }
         });
@@ -167,6 +171,7 @@ public class UnoServer implements GameListener {
                 if (rp != null && !started) {
                     if (readyPlayers.add(client.getSessionId())) {
                         broadcast(rp.getName() + " is ready.");
+                        sendWaitingState();
                         checkStartGame();
                     }
                 }
@@ -192,12 +197,42 @@ public class UnoServer implements GameListener {
                 }
             }
         });
+
+        server.addEventListener("chat", String.class, new DataListener<String>() {
+            @Override
+            public void onData(SocketIOClient client, String data, AckRequest ackRequest) {
+                RemotePlayer rp = remotePlayers.get(client.getSessionId());
+                if (rp != null) {
+                    broadcastChat(rp.getName() + ": " + data);
+                }
+            }
+        });
     }
 
     private void broadcast(String msg) {
         System.out.println(msg);
         for (RemotePlayer p : remotePlayers.values()) {
             p.getClient().sendEvent("message", msg);
+        }
+    }
+
+    private void broadcastChat(String msg) {
+        System.out.println("CHAT: " + msg);
+        for (RemotePlayer p : remotePlayers.values()) {
+            p.getClient().sendEvent("chat", msg);
+        }
+    }
+
+    private void sendWaitingState() {
+        List<Map<String, Object>> info = new ArrayList<>();
+        for (Map.Entry<UUID, RemotePlayer> e : remotePlayers.entrySet()) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("name", e.getValue().getName());
+            m.put("ready", readyPlayers.contains(e.getKey()));
+            info.add(m);
+        }
+        for (RemotePlayer p : remotePlayers.values()) {
+            p.getClient().sendEvent("waiting", info);
         }
     }
 
@@ -228,6 +263,9 @@ public class UnoServer implements GameListener {
         if (!started && readyPlayers.size() >= 2 && readyPlayers.size() == remotePlayers.size()) {
             started = true;
             broadcast("All players ready. Game starting...");
+            for (RemotePlayer p : remotePlayers.values()) {
+                p.getClient().sendEvent("start", "");
+            }
             new Thread(this::playGame).start();
         }
     }
@@ -253,10 +291,17 @@ public class UnoServer implements GameListener {
     }
 
     @Override
-    public void onDraw(Player player, Card card) {
+    public void onDraw(Player player, java.util.List<Card> cards) {
         for (RemotePlayer rp : remotePlayers.values()) {
             if (rp.equals(player)) {
-                rp.getClient().sendEvent("noPlayable", "No playable hand. Drew " + card + ". Click Skip.");
+                java.util.List<String> labels = new java.util.ArrayList<>();
+                for (Card c : cards) {
+                    labels.add(c.toString());
+                }
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("text", "Drew");
+                payload.put("cards", labels);
+                rp.getClient().sendEvent("drawnCards", payload);
                 break;
             }
         }
