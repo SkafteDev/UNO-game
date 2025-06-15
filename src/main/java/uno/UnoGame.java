@@ -5,6 +5,7 @@ import uno.cards.actioncards.ActionCard;
 import uno.piles.DiscardPile;
 import uno.piles.DrawPile;
 import uno.players.Player;
+import uno.GameListener;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -16,6 +17,7 @@ public class UnoGame {
     private final ArrayList<Player> players;
     private Player currentPlayer;
     private Player winner;
+    private GameListener listener;
 
     public UnoGame() {
         this.players = new ArrayList<>();
@@ -23,8 +25,16 @@ public class UnoGame {
         this.discardPile = new DiscardPile(initializeTopCard());
     }
 
+    public void setListener(GameListener listener) {
+        this.listener = listener;
+    }
+
     public DrawPile getDrawPile() {
         return drawPile;
+    }
+
+    public DiscardPile getDiscardPile() {
+        return discardPile;
     }
 
     public ArrayList<Player> getPlayers() {
@@ -86,9 +96,11 @@ public class UnoGame {
 
         this.dealCards();
         this.currentPlayer = randomPlayer();
+        if (listener != null) listener.onState(this);
 
         do {
             printGameStatus();
+            if (listener != null) listener.onState(this);
             drawIfNoPlayableHand(currentPlayer);
             currentPlayer.displayHand();
 
@@ -111,6 +123,7 @@ public class UnoGame {
 
 
         System.out.printf("Winner:       \t %s\n", this.winner.getName());
+        if (listener != null) listener.onWinner(this.winner);
     }
 
     private void drawIfNoPlayableHand(Player currentPlayer) {

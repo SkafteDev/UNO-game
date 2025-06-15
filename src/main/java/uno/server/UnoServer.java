@@ -9,6 +9,7 @@ import com.corundumstudio.socketio.listener.DisconnectListener;
 import com.corundumstudio.socketio.listener.DataListener;
 
 import uno.UnoGame;
+import uno.GameListener;
 import uno.players.Player;
 import uno.cards.Card;
 import uno.cards.Color;
@@ -16,7 +17,7 @@ import uno.piles.DiscardPile;
 
 import java.util.*;
 
-public class UnoServer {
+public class UnoServer implements GameListener {
 
     private static class RemotePlayer extends Player {
         private final SocketIOClient client;
@@ -183,6 +184,28 @@ public class UnoServer {
         }
     }
 
+    private void sendGameState() {
+        for (RemotePlayer p : remotePlayers.values()) {
+            Map<String, Object> state = new HashMap<>();
+            state.put("deck", game.getDrawPile().getSize());
+            state.put("topCard", game.getDiscardPile().getTopCard().toString());
+            List<Map<String, Object>> playersInfo = new ArrayList<>();
+            for (Player pl : game.getPlayers()) {
+                Map<String, Object> pi = new HashMap<>();
+                pi.put("name", pl.getName());
+                pi.put("cards", pl.getHand().size());
+                playersInfo.add(pi);
+            }
+            state.put("players", playersInfo);
+            List<String> hand = new ArrayList<>();
+            for (Card c : p.getHand()) {
+                hand.add(c.toString());
+            }
+            state.put("hand", hand);
+            p.getClient().sendEvent("state", state);
+        }
+    }
+
     private void checkStartGame() {
         if (!started && readyPlayers.size() >= 2 && readyPlayers.size() == remotePlayers.size()) {
             started = true;
@@ -192,12 +215,23 @@ public class UnoServer {
     }
 
     private void playGame() {
+        game.setListener(this);
         game.play();
     }
 
     public void start() {
         server.start();
         System.out.println("Server started");
+    }
+
+    @Override
+    public void onState(UnoGame game) {
+        sendGameState();
+    }
+
+    @Override
+    public void onWinner(Player winner) {
+        broadcast("Winner: " + winner.getName());
     }
 
     public static void main(String[] args) throws Exception {
