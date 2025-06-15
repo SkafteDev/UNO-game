@@ -40,8 +40,8 @@
                 <q-card>
                   <q-card-section>
                     <div class="text-subtitle2">Players</div>
-                    <div v-for="p in players" :key="p.name">
-                      {{ p.name }}: {{ p.cards }}
+                    <div v-for="p in players" :key="p.name" class="q-mb-xs">
+                      <q-chip :label="p.name + ': ' + p.cards" :color="p.name === currentPlayer ? 'orange' : 'secondary'" text-color="white" />
                     </div>
                   </q-card-section>
                 </q-card>
@@ -51,9 +51,10 @@
               <div class="text-subtitle2">Your hand</div>
               <div class="row q-col-gutter-sm">
                 <div class="col-auto" v-for="(card, idx) in hand" :key="idx">
-                  <q-chip :label="card" color="primary" text-color="white" @click="playCard(idx)" />
+                  <q-chip :label="displayLabel(card)" :color="cardColor(card)" text-color="white" clickable @click="playCard(idx)" />
                 </div>
               </div>
+              <q-btn color="orange" class="q-mt-sm" label="Skip" v-if="canSkip" @click="skipTurn" />
             </div>
             <div v-if="colorSelectVisible" class="q-mt-md">
               <div class="text-subtitle2">Choose color</div>

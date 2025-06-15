@@ -102,19 +102,22 @@ public class UnoGame {
             printGameStatus();
             if (listener != null) listener.onState(this);
             drawIfNoPlayableHand(currentPlayer);
+            if (listener != null) listener.onState(this);
             currentPlayer.displayHand();
 
-            if (!currentPlayer.hasPlayableHand(discardPile.getTopCard())) {
-                System.out.printf("\n%s has no playable hand. Passing turn. \n", currentPlayer.getName());
-                passTurn();
-                continue; // No playable hand. Next player's turn.
+            boolean hasPlayable = currentPlayer.hasPlayableHand(discardPile.getTopCard());
+            if (!hasPlayable) {
+                System.out.printf("\n%s has no playable hand. Waiting for skip.\n", currentPlayer.getName());
             }
 
             Card playedCard = currentPlayer.playCard(discardPile);
-            System.out.println(currentPlayer.getName() + " played: " + playedCard);
-
-            if (playedCard instanceof ActionCard actionCard) {
-                actionCard.action(this);
+            if (playedCard == null) {
+                System.out.println(currentPlayer.getName() + " skipped.");
+            } else {
+                System.out.println(currentPlayer.getName() + " played: " + playedCard);
+                if (playedCard instanceof ActionCard actionCard) {
+                    actionCard.action(this);
+                }
             }
 
             passTurn();

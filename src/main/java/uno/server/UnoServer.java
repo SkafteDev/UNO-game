@@ -36,10 +36,14 @@ public class UnoServer implements GameListener {
 
         @Override
         public Card playCard(DiscardPile pile) {
+            boolean hasPlayable = hasPlayableHand(pile.getTopCard());
             client.sendEvent("yourTurn", getHand().toString(), pile.getTopCard().toString());
             synchronized (lock) {
                 chosenIndex = null;
-                client.sendEvent("requestPlay", "");
+                client.sendEvent("requestPlay", hasPlayable);
+                if (!hasPlayable) {
+                    client.sendEvent("noPlayable", "No playable hand. Click Skip.");
+                }
                 try {
                     lock.wait(60000);
                 } catch (InterruptedException e) {
@@ -50,6 +54,9 @@ public class UnoServer implements GameListener {
                 return null;
             }
             Card card = getHand().get(chosenIndex);
+            if (!card.matches(pile.getTopCard())) {
+                return null;
+            }
             if (pile.addCard(card)) {
                 getHand().remove(card);
             }
@@ -189,6 +196,7 @@ public class UnoServer implements GameListener {
             Map<String, Object> state = new HashMap<>();
             state.put("deck", game.getDrawPile().getSize());
             state.put("topCard", game.getDiscardPile().getTopCard().toString());
+            state.put("current", game.getCurrentPlayer() != null ? game.getCurrentPlayer().getName() : "");
             List<Map<String, Object>> playersInfo = new ArrayList<>();
             for (Player pl : game.getPlayers()) {
                 Map<String, Object> pi = new HashMap<>();
