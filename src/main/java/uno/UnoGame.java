@@ -58,8 +58,8 @@ public class UnoGame {
     }
 
     public void addPlayer(Player p) {
-        if (this.players.size() > 10) {
-            throw new RuntimeException("Maximum 10 players allowed.");
+        if (this.players.size() >= 8) {
+            throw new RuntimeException("Maximum 8 players allowed.");
         }
 
         if (this.players.contains(p)) {
@@ -80,8 +80,8 @@ public class UnoGame {
     }
 
     public void play() {
-        if ((this.players.size() < 2 || this.players.size() > 10)) {
-            throw new RuntimeException("Minimum 2 (two) and maximum 10 (ten) players allowed.");
+        if ((this.players.size() < 2 || this.players.size() > 8)) {
+            throw new RuntimeException("Minimum 2 (two) and maximum 8 (eight) players allowed.");
         }
 
         this.dealCards();

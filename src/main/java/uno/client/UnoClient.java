@@ -17,6 +17,17 @@ public class UnoClient {
             @Override
             public void call(Object... args) {
                 socket.emit("join", name);
+                new Thread(() -> {
+                    Scanner sc = new Scanner(System.in);
+                    System.out.println("Type 'ready' when you are ready to play:");
+                    while (true) {
+                        String line = sc.nextLine();
+                        if ("ready".equalsIgnoreCase(line.trim())) {
+                            socket.emit("ready", "ready");
+                            break;
+                        }
+                    }
+                }).start();
             }
         });
 

@@ -91,6 +91,7 @@ public class UnoServer {
     private final SocketIOServer server;
     private final UnoGame game = new UnoGame();
     private final Map<UUID, RemotePlayer> remotePlayers = new LinkedHashMap<>();
+    private final Set<UUID> readyPlayers = new HashSet<>();
     private boolean started = false;
 
     public UnoServer(int port) {
@@ -110,9 +111,11 @@ public class UnoServer {
             @Override
             public void onDisconnect(SocketIOClient client) {
                 RemotePlayer p = remotePlayers.remove(client.getSessionId());
+                readyPlayers.remove(client.getSessionId());
                 if (p != null) {
                     game.getPlayers().remove(p);
                     broadcast(p.getName() + " disconnected.");
+                    checkStartGame();
                 }
             }
         });
@@ -120,6 +123,11 @@ public class UnoServer {
         server.addEventListener("join", String.class, new DataListener<String>() {
             @Override
             public void onData(SocketIOClient client, String name, AckRequest ack) {
+                if (started) {
+                    client.sendEvent("message", "Game already started");
+                    client.disconnect();
+                    return;
+                }
                 if (remotePlayers.size() >= 8) {
                     client.sendEvent("message", "Server full");
                     client.disconnect();
@@ -129,11 +137,20 @@ public class UnoServer {
                 remotePlayers.put(client.getSessionId(), rp);
                 game.addPlayer(rp);
                 broadcast(name + " joined the game.");
+                client.sendEvent("message", "Type 'ready' when you are ready to play.");
+                checkStartGame();
+            }
+        });
 
-                if (!started && game.getPlayers().size() >= 2) {
-                    started = true;
-                    broadcast("Game starting...");
-                    new Thread(UnoServer.this::playGame).start();
+        server.addEventListener("ready", String.class, new DataListener<String>() {
+            @Override
+            public void onData(SocketIOClient client, String data, AckRequest ackRequest) {
+                RemotePlayer rp = remotePlayers.get(client.getSessionId());
+                if (rp != null && !started) {
+                    if (readyPlayers.add(client.getSessionId())) {
+                        broadcast(rp.getName() + " is ready.");
+                        checkStartGame();
+                    }
                 }
             }
         });
@@ -163,6 +180,14 @@ public class UnoServer {
         System.out.println(msg);
         for (RemotePlayer p : remotePlayers.values()) {
             p.getClient().sendEvent("message", msg);
+        }
+    }
+
+    private void checkStartGame() {
+        if (!started && readyPlayers.size() >= 2 && readyPlayers.size() == remotePlayers.size()) {
+            started = true;
+            broadcast("All players ready. Game starting...");
+            new Thread(this::playGame).start();
         }
     }
 
