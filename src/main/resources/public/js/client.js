@@ -85,6 +85,14 @@ createApp({
     displayLabel(card) {
       const parts = card.split('_');
       return parts.slice(1).join(' ');
+    },
+    topCardLabel() {
+      if (!this.topCard) return '';
+      return this.displayLabel(this.topCard);
+    },
+    topCardColor() {
+      if (!this.topCard) return 'grey';
+      return this.cardColor(this.topCard);
     }
   }
 }).use(Quasar).mount('#q-app');

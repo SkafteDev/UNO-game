@@ -32,7 +32,10 @@
                   <q-card-section>
                     <div class="text-subtitle2">Deck</div>
                     <div>{{ deckCount }} cards</div>
-                    <div class="q-mt-sm">Top card: {{ topCard }}</div>
+                    <div class="q-mt-sm">
+                      <span>Top card:</span>
+                      <q-chip :label="topCardLabel()" :color="topCardColor()" text-color="white" />
+                    </div>
                   </q-card-section>
                 </q-card>
               </div>

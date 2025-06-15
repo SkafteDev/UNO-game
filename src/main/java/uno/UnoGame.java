@@ -129,14 +129,18 @@ public class UnoGame {
         if (listener != null) listener.onWinner(this.winner);
     }
 
-    private void drawIfNoPlayableHand(Player currentPlayer) {
+    private Card drawIfNoPlayableHand(Player currentPlayer) {
         if (!currentPlayer.hasPlayableHand(discardPile.getTopCard())) {
             System.out.printf("\n%s has no playable hand. Drawing.\n", currentPlayer.getName());
             if (drawPile.isEmpty()) {
                 shuffleDiscardPile();
             }
-            currentPlayer.drawCardFrom(drawPile);
+            Card drawn = drawPile.draw();
+            currentPlayer.receiveCard(drawn);
+            if (listener != null) listener.onDraw(currentPlayer, drawn);
+            return drawn;
         }
+        return null;
     }
 
     private Player randomPlayer() {

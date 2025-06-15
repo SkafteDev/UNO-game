@@ -38,29 +38,39 @@ public class UnoServer implements GameListener {
         public Card playCard(DiscardPile pile) {
             boolean hasPlayable = hasPlayableHand(pile.getTopCard());
             client.sendEvent("yourTurn", getHand().toString(), pile.getTopCard().toString());
-            synchronized (lock) {
-                chosenIndex = null;
-                client.sendEvent("requestPlay", hasPlayable);
-                if (!hasPlayable) {
-                    client.sendEvent("noPlayable", "No playable hand. Click Skip.");
+            while (true) {
+                synchronized (lock) {
+                    chosenIndex = null;
+                    client.sendEvent("requestPlay", hasPlayable);
+                    if (!hasPlayable) {
+                        client.sendEvent("noPlayable", "No playable hand. Click Skip.");
+                    }
+                    try {
+                        lock.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
-                try {
-                    lock.wait(60000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                if (chosenIndex == null) {
+                    continue;
                 }
+                if (chosenIndex == -1) {
+                    return null;
+                }
+                if (chosenIndex < 0 || chosenIndex >= getHand().size()) {
+                    client.sendEvent("message", "Invalid play. Choose another card.");
+                    continue;
+                }
+                Card card = getHand().get(chosenIndex);
+                if (!card.matches(pile.getTopCard())) {
+                    client.sendEvent("message", "Invalid play. Choose another card.");
+                    continue;
+                }
+                if (pile.addCard(card)) {
+                    getHand().remove(card);
+                }
+                return card;
             }
-            if (chosenIndex == null || chosenIndex < 0 || chosenIndex >= getHand().size()) {
-                return null;
-            }
-            Card card = getHand().get(chosenIndex);
-            if (!card.matches(pile.getTopCard())) {
-                return null;
-            }
-            if (pile.addCard(card)) {
-                getHand().remove(card);
-            }
-            return card;
         }
 
         @Override
@@ -69,7 +79,7 @@ public class UnoServer implements GameListener {
             synchronized (lock) {
                 chosenColor = null;
                 try {
-                    lock.wait(60000);
+                    lock.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -240,6 +250,16 @@ public class UnoServer implements GameListener {
     @Override
     public void onWinner(Player winner) {
         broadcast("Winner: " + winner.getName());
+    }
+
+    @Override
+    public void onDraw(Player player, Card card) {
+        for (RemotePlayer rp : remotePlayers.values()) {
+            if (rp.equals(player)) {
+                rp.getClient().sendEvent("noPlayable", "No playable hand. Drew " + card + ". Click Skip.");
+                break;
+            }
+        }
     }
 
     public static void main(String[] args) throws Exception {
