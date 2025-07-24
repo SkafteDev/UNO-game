@@ -5,6 +5,7 @@ import uno.cards.actioncards.ActionCard;
 import uno.piles.DiscardPile;
 import uno.piles.DrawPile;
 import uno.players.Player;
+import uno.GameListener;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -16,6 +17,7 @@ public class UnoGame {
     private final ArrayList<Player> players;
     private Player currentPlayer;
     private Player winner;
+    private GameListener listener;
 
     public UnoGame() {
         this.players = new ArrayList<>();
@@ -23,8 +25,20 @@ public class UnoGame {
         this.discardPile = new DiscardPile(initializeTopCard());
     }
 
+    public void setListener(GameListener listener) {
+        this.listener = listener;
+    }
+
+    public GameListener getListener() {
+        return listener;
+    }
+
     public DrawPile getDrawPile() {
         return drawPile;
+    }
+
+    public DiscardPile getDiscardPile() {
+        return discardPile;
     }
 
     public ArrayList<Player> getPlayers() {
@@ -58,8 +72,8 @@ public class UnoGame {
     }
 
     public void addPlayer(Player p) {
-        if (this.players.size() > 10) {
-            throw new RuntimeException("Maximum 10 players allowed.");
+        if (this.players.size() >= 8) {
+            throw new RuntimeException("Maximum 8 players allowed.");
         }
 
         if (this.players.contains(p)) {
@@ -80,29 +94,34 @@ public class UnoGame {
     }
 
     public void play() {
-        if ((this.players.size() < 2 || this.players.size() > 10)) {
-            throw new RuntimeException("Minimum 2 (two) and maximum 10 (ten) players allowed.");
+        if ((this.players.size() < 2 || this.players.size() > 8)) {
+            throw new RuntimeException("Minimum 2 (two) and maximum 8 (eight) players allowed.");
         }
 
         this.dealCards();
         this.currentPlayer = randomPlayer();
+        if (listener != null) listener.onState(this);
 
         do {
             printGameStatus();
+            if (listener != null) listener.onState(this);
             drawIfNoPlayableHand(currentPlayer);
+            if (listener != null) listener.onState(this);
             currentPlayer.displayHand();
 
-            if (!currentPlayer.hasPlayableHand(discardPile.getTopCard())) {
-                System.out.printf("\n%s has no playable hand. Passing turn. \n", currentPlayer.getName());
-                passTurn();
-                continue; // No playable hand. Next player's turn.
+            boolean hasPlayable = currentPlayer.hasPlayableHand(discardPile.getTopCard());
+            if (!hasPlayable) {
+                System.out.printf("\n%s has no playable hand. Waiting for skip.\n", currentPlayer.getName());
             }
 
             Card playedCard = currentPlayer.playCard(discardPile);
-            System.out.println(currentPlayer.getName() + " played: " + playedCard);
-
-            if (playedCard instanceof ActionCard actionCard) {
-                actionCard.action(this);
+            if (playedCard == null) {
+                System.out.println(currentPlayer.getName() + " skipped.");
+            } else {
+                System.out.println(currentPlayer.getName() + " played: " + playedCard);
+                if (playedCard instanceof ActionCard actionCard) {
+                    actionCard.action(this);
+                }
             }
 
             passTurn();
@@ -111,16 +130,21 @@ public class UnoGame {
 
 
         System.out.printf("Winner:       \t %s\n", this.winner.getName());
+        if (listener != null) listener.onWinner(this.winner);
     }
 
-    private void drawIfNoPlayableHand(Player currentPlayer) {
+    private Card drawIfNoPlayableHand(Player currentPlayer) {
         if (!currentPlayer.hasPlayableHand(discardPile.getTopCard())) {
             System.out.printf("\n%s has no playable hand. Drawing.\n", currentPlayer.getName());
             if (drawPile.isEmpty()) {
                 shuffleDiscardPile();
             }
-            currentPlayer.drawCardFrom(drawPile);
+            Card drawn = drawPile.draw();
+            currentPlayer.receiveCard(drawn);
+            if (listener != null) listener.onDraw(currentPlayer, java.util.List.of(drawn));
+            return drawn;
         }
+        return null;
     }
 
     private Player randomPlayer() {
