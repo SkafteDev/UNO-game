@@ -7,6 +7,26 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/quasar@2/dist/quasar.umd.prod.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/socket.io-client/dist/socket.io.min.js" defer></script>
+    <style>
+        body { background:#075e54; }
+        .game-table { position:relative; margin:auto; width:600px; height:400px; background:#074e3b; border-radius:50%; border:6px solid #333; }
+        .piles { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; gap:30px; align-items:center; }
+        .uno-card { width:60px; height:90px; border-radius:8px; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px; text-shadow:0 0 2px #000; border:2px solid #fff; }
+        .uno-card.yellow { color:#000; }
+        .red { background:#d32f2f; }
+        .blue { background:#1976d2; }
+        .green { background:#388e3c; }
+        .yellow { background:#fbc02d; }
+        .black { background:#333; }
+        .back { background:#555; }
+        .players-area { position:absolute; top:50%; left:50%; width:100%; height:100%; transform:translate(-50%,-50%); pointer-events:none; }
+        .player { position:absolute; text-align:center; width:100px; pointer-events:auto; }
+        .player img { width:80px; height:80px; border-radius:50%; }
+        .player-name { font-weight:bold; color:#fff; text-shadow:0 0 2px #000; }
+        .player-cards { color:#fff; text-shadow:0 0 2px #000; }
+        .player.active img { border:3px solid orange; }
+        .hand-area { margin-top:20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    </style>
 </head>
 <body>
 <div id="q-app">
@@ -31,57 +51,43 @@
                         <q-btn color="green" label="Ready" v-if="!ready" @click="sendReady"></q-btn>
                     </div>
                     <div v-else>
-                        <div class="row q-mt-md">
-                            <div class="col-12 col-md-3">
-                                <q-card>
-                                    <q-card-section>
-                                        <div class="text-subtitle2">Deck</div>
-                                        <div>{{ deckCount }} cards</div>
-                                        <div class="q-mt-sm">
-                                            <span>Top card:</span>
-                                            <q-chip :label="topCardLabel()" :color="topCardColor()"
-                                                    text-color="white"></q-chip>
+                        <div class="row q-col-gutter-md">
+                            <div class="col-12 col-md-8">
+                                <div class="game-table q-mt-md">
+                                    <div class="piles">
+                                        <div class="uno-card back">{{ deckCount }}</div>
+                                        <div v-if="topCard" class="uno-card" :class="cardColor(topCard)">{{ displayLabel(topCard) }}</div>
+                                    </div>
+                                    <div class="players-area">
+                                        <div v-for="(p,idx) in players" :key="p.name" class="player" :class="{active:p.name==currentPlayer}" :style="playerPositionStyle(idx, players.length)">
+                                            <img :src="playerPlaceholder" alt="player" />
+                                            <div class="player-name">{{ p.name }}</div>
+                                            <div class="player-cards">{{ p.cards }}</div>
                                         </div>
-                                    </q-card-section>
-                                </q-card>
+                                    </div>
+                                </div>
+                                <div class="hand-area">
+                                    <div v-for="(card, idx) in hand" :key="idx" class="uno-card" :class="cardColor(card)" @click="playCard(idx)" style="cursor:pointer;">
+                                        {{ displayLabel(card) }}
+                                    </div>
+                                </div>
+                                <div class="q-mt-sm">
+                                    <q-btn color="orange" label="Skip" v-if="canSkip" @click="skipTurn"></q-btn>
+                                    <q-btn color="secondary" class="q-ml-sm" :label="autoplay ? 'Stop Autoplay' : 'Autoplay'" @click="toggleAutoplay"></q-btn>
+                                </div>
                             </div>
-                            <div class="col-12 col-md-6">
-                                <q-card>
-                                    <q-card-section>
-                                        <div class="text-subtitle2">Players</div>
-                                        <div v-for="p in players" :key="p.name" class="q-mb-xs">
-                                            <q-chip :label="p.name + ': ' + p.cards"
-                                                    :color="p.name == currentPlayer ? 'orange' : 'secondary'"
-                                                    text-color="white"></q-chip>
-                                        </div>
-                                    </q-card-section>
-                                </q-card>
-                            </div>
-                            <div class="col-12 col-md-3">
+                            <div class="col-12 col-md-4">
                                 <q-card class="column" style="height:300px">
                                     <q-card-section class="bg-secondary text-white">Chat</q-card-section>
                                     <q-card-section class="scroll" style="flex:1 1 auto; overflow-y:auto;">
                                         <div v-for="(c,idx) in chats" :key="idx">{{ c }}</div>
                                     </q-card-section>
                                     <q-card-actions>
-                                        <q-input dense v-model="chatInput" @keyup.enter="sendChat"
-                                                 placeholder="Message"></q-input>
+                                        <q-input dense v-model="chatInput" @keyup.enter="sendChat" placeholder="Message"></q-input>
                                         <q-btn flat label="Send" @click="sendChat"></q-btn>
                                     </q-card-actions>
                                 </q-card>
                             </div>
-                        </div>
-                        <div class="q-mt-md">
-                            <div class="text-subtitle2">Your hand</div>
-                            <div class="row q-col-gutter-sm">
-                                <div class="col-auto" v-for="(card, idx) in hand" :key="idx">
-                                    <q-chip :label="displayLabel(card)" :color="cardColor(card)" text-color="white"
-                                            clickable @click="playCard(idx)"></q-chip>
-                                </div>
-                            </div>
-                            <q-btn color="orange" class="q-mt-sm" label="Skip" v-if="canSkip" @click="skipTurn"></q-btn>
-                            <q-btn color="secondary" class="q-mt-sm q-ml-sm"
-                                   :label="autoplay ? 'Stop Autoplay' : 'Autoplay'" @click="toggleAutoplay"></q-btn>
                         </div>
                         <q-dialog v-model="colorSelectVisible">
                             <q-card>
@@ -97,8 +103,7 @@
                         <div class="q-mt-md" style="max-height:200px; overflow-y:auto;">
                             <div v-for="(m,idx) in messages" :key="idx">
                                 <span>{{ m.text }}</span>
-                                <q-chip v-for="(c,i) in m.cards" :key="i" :label="displayLabel(c)" :color="cardColor(c)"
-                                        text-color="white" class="q-ml-xs"/>
+                                <span v-for="(c,i) in m.cards" :key="i" class="uno-card q-ml-xs" :class="cardColor(c)" style="font-size:14px; width:40px; height:60px;">{{ displayLabel(c) }}</span>
                             </div>
                         </div>
                     </div>

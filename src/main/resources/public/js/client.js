@@ -20,7 +20,8 @@ createApp({
       colorSelectVisible: false,
       currentPlayer: '',
       canSkip: false,
-      autoplay: false
+      autoplay: false,
+      playerPlaceholder: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNDAiIHk9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjQwIiBmaWxsPSIjNzc3Ij5QPC90ZXh0Pjwvc3ZnPg=='
       };
     },
     methods: {
@@ -135,6 +136,15 @@ createApp({
         if (counts[col] !== undefined) counts[col]++;
       });
       return Object.entries(counts).sort((a,b) => b[1]-a[1])[0][0] || 'RED';
+    },
+    playerPositionStyle(idx, total) {
+      const angle = (360 / total) * idx - 90;
+      const radius = 150;
+      return {
+        top: '50%',
+        left: '50%',
+        transform: `translate(-50%, -50%) rotate(${angle}deg) translate(${radius}px) rotate(${-angle}deg)`
+      };
     },
     cardColor(card) {
       const color = card.split('_')[0];
