@@ -107,16 +107,17 @@ public class UnoServer implements GameListener {
     }
 
     private final SocketIOServer server;
+    private final Configuration serverConfig;
     private final UnoGame game = new UnoGame();
     private final Map<UUID, RemotePlayer> remotePlayers = new LinkedHashMap<>();
     private final Set<UUID> readyPlayers = new HashSet<>();
     private boolean started = false;
 
     public UnoServer(int port) {
-        Configuration config = new Configuration();
-        config.setHostname("localhost");
-        config.setPort(port);
-        server = new SocketIOServer(config);
+        serverConfig = new Configuration();
+        serverConfig.setHostname("localhost");
+        serverConfig.setPort(port);
+        server = new SocketIOServer(serverConfig);
 
         server.addConnectListener(new ConnectListener() {
             @Override
@@ -277,7 +278,7 @@ public class UnoServer implements GameListener {
 
     public void start() {
         server.start();
-        System.out.println("Server started");
+        System.out.println("UNO server started on: " + serverConfig.getHostname() + ":" + serverConfig.getPort());
     }
 
     @Override
