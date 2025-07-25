@@ -38,8 +38,8 @@
         </q-header>
         <q-page-container>
             <q-page class="q-pa-md">
-                <div v-if="!connected" class="q-gutter-md">
-                    <q-input v-model="playerName" label="Player name"></q-input>
+                <div color="white" v-if="!connected" class="q-gutter-md">
+                    <q-input color="white" input-class="text-white" v-model="playerName" label="Player name"></q-input>
                     <q-btn color="primary" label="Connect" @click="connect" :disable="!playerName"></q-btn>
                 </div>
                 <div v-else class="q-gutter-md">

@@ -2,6 +2,24 @@
 
 This project contains a simple implementation of the classic UNO card game written in Java. It provides a basic command line version, as well as an experimental multiplayer server using Socket.IO with a small web interface.
 
+## Features
+- Play vs. the computer
+- Online/offline Multi-player
+- Play in Browser or in the CLI
+- Chat
+- Waiting room
+
+## Gameplay example in browser
+
+1. Connect as a new player  
+![1_new_player.png](docs%2Fgameplay%2F1_new_player.png)
+2. Await other players until they are ready to play.  
+![2_waiting_room.png](docs%2Fgameplay%2F2_waiting_room.png)
+3. Play vs. the other players  
+![draw_2_example.png](docs%2Fgameplay%2Fdraw_2_example.png)
+![actioncard_wild.png](docs%2Fgameplay%2Factioncard_wild.png)
+![multiplayer_example.png](docs%2Fgameplay%2Fmultiplayer_example.png)
+
 ## Repository Structure
 
 ```
@@ -48,7 +66,7 @@ mvn exec:java -Dexec.mainClass="uno.Main"
 mvn exec:java -Dexec.mainClass="uno.server.UnoServer"
 ```
 
-By default it listens on port `9092`. A simple browser based client is provided under `src/main/resources/public` – open `index.html` in a browser and connect to the server. There is also a lightweight CLI client (`uno.client.UnoClient`) which can connect via:
+By default it listens on port `9092`. A simple browser based client is provided under `WebUI/` – open `index.html` in a browser and connect to the server. There is also a lightweight CLI client (`uno.client.UnoClient`) which can connect via:
 
 ```bash
 mvn exec:java -Dexec.mainClass="uno.client.UnoClient" -Dexec.args="http://localhost:9092 playerName"
